@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Invoice</title>
+
+<link rel="stylesheet" href="Bill.css">
+
+<!-- ✅ Only ONE library (bundle includes html2canvas + jsPDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+<a href="history.html"><button class="print-btn" style="background:#0069d9;">Show History</button></a>
+<button onclick="savePDF()" class="print-btn" style="background:#fd7e14;">Save PDF</button>
+<button onclick="sharePDF()" class="print-btn" style="background:#28a745;">Share PDF</button>
+
+<div class="invoice-box" id="invoice">
+  <div class="header">
+    <img src="logo.png" alt="Shop Logo" class="logo">
+    <div class="header-text">
+      <h2 class="shop-name">ROHTAS PLY & FURNITURE WORKSHOP</h2>
+      <p>Ramdihra Station Rohtas (Bihar) 821312</p>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <td><b>Phone:</b> +91 9576611959</td>
+      <td><b>GSTIN:</b> 10GNIPK2417N1ZZ</td>
+      <td><b>Mr.</b> Kundan Sharma</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td rowspan="4" class="bill-to">
+        <b>BILL TO</b><br>
+
+        <span class="bt-line">
+          <span class="bt-lbl">Name:</span>
+          <span id="cName" contenteditable="true" class="ce-ph" placeholder="Customer Name"></span>
+        </span><br>
+
+        <span class="bt-line">
+          <span class="bt-lbl">Phone:</span>
+          <span id="cPhone" contenteditable="true" class="ce-ph" placeholder="0000000000"></span>
+        </span><br>
+
+        <span class="bt-line">
+          <span class="bt-lbl">GSTIN:</span>
+          <span id="cGst" contenteditable="true" class="ce-ph" placeholder="00AAAA0000A1Z0"></span>
+        </span><br>
+
+        <span class="bt-line">
+          <span class="bt-lbl">Place:</span>
+          <span id="cPlace" contenteditable="true" class="ce-ph" placeholder="India"></span>
+        </span>
+      </td>
+
+      <td><b>Invoice No</b></td>
+      <td id="invoiceNo">INV-1</td>
+    </tr>
+
+    <tr>
+      <td><b>Date</b></td>
+      <td id="invoiceDate"></td>
+    </tr>
+  </table>
+
+  <br>
+  <h3 class="items-title">Items Table</h3>
+
+  <table id="invoiceTable">
+    <tr>
+      <th>Sr</th><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Tax</th><th>Amount</th>
+    </tr>
+  </table>
+  <button onclick="addRow()" class="add-btn">+ Add Item</button>
+
+  <table class="summary-table" id="summaryTable">
+    <tr>
+      <td colspan="4" class="left-blank"></td>
+      <td class="right"><b>Discount</b></td>
+      <td><input type="number" id="discount" value="0" oninput="calculateTotal()"></td>
+    </tr>
+
+    <tr id="qtyTaxRow">
+      <td colspan="2"><b>Total Qty</b></td>
+      <td id="totalQty">0</td>
+      <td class="mid-blank"></td>
+      <td class="right"><b>Total Tax</b></td>
+      <td id="totalTax">0</td>
+    </tr>
+
+    <tr>
+      <td colspan="4" class="left-blank"></td>
+      <td class="right"><b>Grand Total</b></td>
+      <td id="grandTotal">0</td>
+    </tr>
+
+    <tr>
+      <td colspan="4" class="left-blank"></td>
+      <td class="right"><b>Received</b></td>
+      <td><input type="number" id="received" value="0" oninput="calculateTotal()"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4" class="left-blank"></td>
+      <td class="right"><b>Due</b></td>
+      <td id="dueBalance">0</td>
+    </tr>
+  </table>
+
+  <div class="footer-box">
+    <div><b>Notes</b><br>* No return<br>* Goods once sold will not be taken back</div>
+    <div><b>Terms</b><br>1. GST Extra<br>2. Delivery Charges Extra<br>3. Pay Due in 15 Days</div>
+  </div>
+
+  <div class="sign">Authorised Signatory<br><b>ROHTAS PLY & FURNITURE WORKSHOP</b></div>
+</div>
+
+<div id="toast" class="toast">Invoice Saved & PDF downloaded!</div>
+
+<script>
+let sr = 1;
+
+window.onload = () => {
+  let last = localStorage.getItem("lastInvoiceNo");
+  last = last ? Number(last) + 1 : 1;
+  document.getElementById("invoiceNo").innerText = "INV-" + last;
+  document.getElementById("invoiceDate").innerText = new Date().toLocaleDateString();
+  localStorage.setItem("lastInvoiceNo", last);
+
+  // optional: first row auto
+  // addRow();
+};
+
+function addRow() {
+  const table = document.getElementById("invoiceTable");
+
+  const row = `
+    <tr>
+      <td>${sr++}</td>
+      <td contenteditable="true" class="ce" data-placeholder="Item"></td>
+      <td contenteditable="true" class="ce" data-placeholder="Size"></td>
+      <td><input type="number" placeholder="0" oninput="calculateTotal()"></td>
+      <td><input type="number" placeholder="0" oninput="calculateTotal()"></td>
+      <td><input type="number" placeholder="0" oninput="calculateTotal()"></td>
+      <td class="amount">0</td>
+    </tr>
+  `;
+  table.insertAdjacentHTML("beforeend", row);
+}
+
+/* ✅ Fix: contenteditable me blank chhodne par <br> aa jata hai, placeholder break hota hai [web:304] */
+document.addEventListener("blur", (e) => {
+  if (e.target.matches && e.target.matches("#invoiceTable td.ce[contenteditable='true'], .ce-ph[contenteditable='true']")) {
+    const html = e.target.innerHTML.trim().toLowerCase();
+    if (html === "<br>" || html === "<div><br></div>") e.target.innerHTML = "";
+  }
+}, true);
+
+function calculateTotal() {
+  const rows = document.querySelectorAll("#invoiceTable tr");
+  let qty = 0, tax = 0, total = 0;
+
+  rows.forEach((r,i) => {
+    if(i === 0) return;
+    const td = r.querySelectorAll("td");
+    if (!td || td.length < 7) return;
+
+    const q = Number(td[3].querySelector("input")?.value) || 0;
+    const p = Number(td[4].querySelector("input")?.value) || 0;
+    const t = Number(td[5].querySelector("input")?.value) || 0;
+
+    const amt = (q * p) + t;
+    td[6].innerText = amt.toFixed(2);
+
+    qty += q; tax += t; total += amt;
+  });
+
+  total -= (Number(document.getElementById("discount").value) || 0);
+  if (total < 0) total = 0;
+
+  document.getElementById("totalQty").innerText = qty;
+  document.getElementById("totalTax").innerText = tax.toFixed(2);
+  document.getElementById("grandTotal").innerText = total.toFixed(2);
+
+  const rec = Number(document.getElementById("received").value) || 0;
+  document.getElementById("dueBalance").innerText = (total - rec).toFixed(2);
+}
+
+/* ✅ PDF snapshot me vertical line remove [web:478] */
+function pdfRemoveLine(clonedDoc) {
+  clonedDoc.querySelectorAll(".summary-table td.left-blank").forEach(td => {
+    td.style.borderRight = "0";
+  });
+
+  clonedDoc.querySelectorAll(".summary-table tr").forEach(tr => {
+    const tds = tr.querySelectorAll("td");
+    if (tds.length >= 2) tds[1].style.borderLeft = "0";
+  });
+
+  const row = clonedDoc.getElementById("qtyTaxRow");
+  if (row) row.querySelectorAll(".mid-blank").forEach(el => el.remove());
+}
+
+function saveHistory(pdfBase64){
+  const items = [];
+  document.querySelectorAll("#invoiceTable tr").forEach((r,i)=>{
+    if(i===0) return;
+    const td = r.querySelectorAll("td");
+    if (!td || td.length < 7) return;
+
+    items.push({
+      sr: td[0].innerText.trim(),
+      item: td[1].innerText.trim(),
+      size: td[2].innerText.trim(),
+      qty: td[3].querySelector("input")?.value || "",
+      price: td[4].querySelector("input")?.value || "",
+      tax: td[5].querySelector("input")?.value || "",
+      amount: td[6].innerText.trim()
+    });
+  });
+
+  const invoiceData = {
+    invoiceNo: document.getElementById("invoiceNo").innerText.trim(),
+    date: document.getElementById("invoiceDate").innerText.trim(),
+    customer: document.getElementById("cName").innerText.trim(),
+    phone: document.getElementById("cPhone").innerText.trim(),
+    gstin: document.getElementById("cGst").innerText.trim(),
+    place: document.getElementById("cPlace").innerText.trim(),
+    discount: document.getElementById("discount").value || "0",
+    totalQty: document.getElementById("totalQty").innerText.trim(),
+    totalTax: document.getElementById("totalTax").innerText.trim(),
+    grandTotal: document.getElementById("grandTotal").innerText.trim(),
+    received: document.getElementById("received").value || "0",
+    dueBalance: document.getElementById("dueBalance").innerText.trim(),
+    items,
+    pdf: pdfBase64
+  };
+
+  const old = JSON.parse(localStorage.getItem("invoiceHistory") || "[]");
+  old.push(invoiceData);
+  localStorage.setItem("invoiceHistory", JSON.stringify(old));
+}
+
+/* ✅ SAVE PDF + SAVE HISTORY (base64) [web:704][web:461] */
+async function savePDF() {
+  const invoice = document.getElementById("invoice");
+  if (!invoice) return alert("Invoice not found!");
+
+  calculateTotal();
+
+  const opt = {
+    filename: document.getElementById("invoiceNo").innerText + ".pdf",
+    margin: [0, 0, 0, 0],
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      onclone: (doc) => pdfRemoveLine(doc)
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["avoid-all", "css"] }
+  };
+
+  try {
+    // 1) make base64
+    const pdfData = await html2pdf().set(opt).from(invoice).output("datauristring");
+
+    // 2) save history
+    saveHistory(pdfData);
+
+    // 3) download
+    const link = document.createElement("a");
+    link.href = pdfData;
+    link.download = document.getElementById("invoiceNo").innerText + ".pdf";
+    link.click();
+
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+
+  } catch (err) {
+    console.error("PDF Error:", err);
+    alert("PDF save failed. Console check karo.");
+  }
+}
+
+function sharePDF() {
+  const invoice = document.getElementById("invoice");
+  calculateTotal();
+
+  const opt = {
+    filename: "invoice.pdf",
+    margin: 0.5,
+    html2canvas: { scale: 2, onclone: (doc) => pdfRemoveLine(doc) },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  html2pdf().set(opt).from(invoice).output("datauristring").then(pdfData => {
+    const win = window.open();
+    win.document.write('<iframe src="'+pdfData+'" frameborder="0" style="width:100%;height:100%;"></iframe>');
+  });
+}
+</script>
+
+</body>
+</html>

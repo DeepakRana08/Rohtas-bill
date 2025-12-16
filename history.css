@@ -1,0 +1,122 @@
+/* --------------------------------------------------
+   GLOBAL MODERN UI
+-------------------------------------------------- */
+body {
+    margin: 0;
+    padding: 22px;
+    background: linear-gradient(135deg, #dfe9f3, #ffffff);
+    font-family: "Poppins", sans-serif;
+}
+
+/* --------------------------------------------------
+   TITLE WITH MODERN SHADOW
+-------------------------------------------------- */
+h2 {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #2d3f8a;
+    margin-bottom: 35px;
+
+    text-shadow: 
+        0px 2px 4px rgba(0,0,0,0.1),
+        0px 4px 12px rgba(63,81,181,0.25);
+}
+
+/* --------------------------------------------------
+   INVOICE CARD — NEUMORPHIC DESIGN
+-------------------------------------------------- */
+.box {
+    background: #f4f6f9;
+    border-radius: 18px;
+    padding: 25px 28px;
+    margin-bottom: 30px;
+
+    box-shadow:
+        9px 9px 18px rgba(0,0,0,0.15),
+        -9px -9px 18px rgba(255,255,255,0.8);
+
+    transition: all 0.25s ease-in-out;
+}
+
+/* Floating hover */
+.box:hover {
+    transform: translateY(-6px);
+    box-shadow:
+        12px 12px 20px rgba(0,0,0,0.18),
+        -6px -6px 20px rgba(255,255,255,0.9);
+}
+
+/* --------------------------------------------------
+   CARD HEADER (TITLE)
+-------------------------------------------------- */
+.box h3 {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ac7e3e;
+    margin-top: 0;
+    margin-bottom: 12px;
+
+    padding-left: 12px;
+    border-left: 6px solid #ac7e3e;
+}
+
+/* --------------------------------------------------
+   LABELS & TEXT
+-------------------------------------------------- */
+.box b {
+    font-size: 15px;
+    color: #222;
+}
+
+.box p,
+.box span {
+    font-size: 15px;
+    color: #444;
+    margin: 4px 0;
+}
+
+/* --------------------------------------------------
+   BEAUTIFUL PDF FRAME
+-------------------------------------------------- */
+iframe {
+    width: 100%;
+    height: 470px;
+
+    border-radius: 12px;
+    border: 2px solid rgba(172, 126, 62, 0.8);
+
+    margin-top: 15px;
+
+    box-shadow:
+        0px 5px 15px rgba(0,0,0,0.25),
+        inset 0px 0px 12px rgba(255,255,255,0.6);
+}
+
+/* --------------------------------------------------
+   SMALL SCREEN RESPONSIVE FIX
+-------------------------------------------------- */
+@media (max-width: 650px) {
+
+    body {
+        padding: 12px;
+    }
+
+    .box {
+        padding: 18px 15px;
+        margin-bottom: 22px;
+    }
+
+    iframe {
+        height: 350px;
+    }
+
+    h2 {
+        font-size: 26px;
+    }
+
+    .box h3 {
+        font-size: 20px;
+    }
+}

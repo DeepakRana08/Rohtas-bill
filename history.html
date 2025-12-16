@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice History</title>
+  <style>
+    body{ font-family: Arial; padding: 20px; background:#eef1f5; }
+    .topbar{ display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+    .card{
+      background:#fff;
+      border:1px solid #ccc;
+      padding:12px;
+      margin:10px 0;
+      border-radius:6px;
+    }
+    .row{ margin:4px 0; }
+    .btns{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    button{ padding:8px 12px; cursor:pointer; border:0; border-radius:4px; }
+    .btn-back{ background:#0069d9; color:#fff; }
+    .btn-clear{ background:#6c757d; color:#fff; }
+    .btn-view{ background:#28a745; color:#fff; }
+    .btn-download{ background:#fd7e14; color:#fff; }
+    .btn-delete{ background:#dc3545; color:#fff; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html"><button class="btn-back">Back</button></a>
+  <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+</div>
+
+<h2>Invoice History</h2>
+<div id="list"></div>
+
+<script>
+function getHistory(){
+  return JSON.parse(localStorage.getItem("invoiceHistory") || "[]");
+}
+
+function setHistory(arr){
+  localStorage.setItem("invoiceHistory", JSON.stringify(arr));
+}
+
+function render(){
+  const list = document.getElementById("list");
+  const data = getHistory();
+
+  if(data.length === 0){
+    list.innerHTML = "<p>No history found.</p>";
+    return;
+  }
+
+  list.innerHTML = data.map((inv, idx) => `
+    <div class="card">
+      <div class="row"><b>${inv.invoiceNo || "INV"}</b> | ${inv.date || ""}</div>
+      <div class="row">Customer: ${inv.customer || "-"}</div>
+      <div class="row">Phone: ${inv.phone || "-"}</div>
+      <div class="row">Grand Total: ${inv.grandTotal || "0"}</div>
+
+      <div class="btns">
+        <button class="btn-view" onclick="openPdf(${idx})">PDF View</button>
+        <button class="btn-download" onclick="downloadPdf(${idx})">Download PDF</button>
+        <button class="btn-delete" onclick="deleteOne(${idx})">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openPdf(i){
+  const data = getHistory();
+  const pdfData = data[i]?.pdf;
+  if(!pdfData) return alert("PDF not found!");
+
+  const win = window.open("");
+  win.document.write(
+    '<iframe src="'+pdfData+'" frameborder="0" style="width:100%;height:100%;"></iframe>'
+  );
+}
+
+function downloadPdf(i){
+  const data = getHistory();
+  const pdfData = data[i]?.pdf;
+  if(!pdfData) return alert("PDF not found!");
+
+  const name = (data[i]?.invoiceNo || "invoice") + ".pdf";
+  const a = document.createElement("a");
+  a.href = pdfData;
+  a.download = name;
+  a.click();
+}
+
+function deleteOne(i){
+  const data = getHistory();
+  if(!confirm("Delete this invoice from history?")) return;
+
+  data.splice(i, 1);            // ✅ remove one item [web:730]
+  setHistory(data);
+  render();
+}
+
+
+render();
+</script>
+
+</body>
+</html>
