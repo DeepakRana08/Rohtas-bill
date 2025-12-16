@@ -278,7 +278,7 @@ th{
 
 /* 2) BILL TO placeholders (spans): uses placeholder="" */
 .ce-ph[contenteditable="true"]{
-  background:#f8f8f8;
+  background:#ffffff;
   border-radius:4px;
   padding:1px 4px;
   min-width: 140px;
@@ -420,3 +420,4 @@ th{
   pointer-events: none;
   display: block; /* Firefox */
 }
+
