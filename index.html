@@ -256,7 +256,7 @@ async function savePDF() {
 
   const opt = {
     filename: document.getElementById("invoiceNo").innerText + ".pdf",
-    margin: [0, -5, 0, 0],
+    margin: [0, -2, 0, 0],
     html2canvas: {
       scale: 2,
       useCORS: true,
@@ -310,4 +310,5 @@ function sharePDF() {
 
 </body>
 </html>
+
 
